@@ -264,6 +264,7 @@ class TestApp(TestWrapper, TestClient):
         else:
             print("Executing requests")
             #self.reqGlobalCancel()
+            self.reqPositions()
             #self.marketDataTypeOperations()
             #self.accountOperations_req()
             #####self.tickDataOperations_req()
@@ -960,44 +961,41 @@ class TestApp(TestWrapper, TestClient):
 
 
         t_value =  (currentBar-np.mean(self.realBarData))/np.std(self.realBarData)
-        if (abs(t_value) > 3):
-            self.reqPositions()
-            if t_value < -0.0:
-                self.t_ctr_buy +=1
-                if self.pos_m2k > 10:
-                    print("Too many position +++")
-                    return
-                else:
-                    pr = round(low, 1)
-                    self.placeOrder(
-                    self.nextOrderId(), 
-                    ContractSamples.FutureM2K(), 
-                    OrderSamples.LimitOrder("BUY", 1, pr))
-
-            else:
-                self.t_ctr_sell += 1
-                if self.pos_m2k < -10:
-                    print("Too many position ---")
-                    self.reqCurrentTime()
-                    return
-                else:
-                    pr = round(high, 1)
-                    self.placeOrder(
-                    self.nextOrderId(), 
-                    ContractSamples.FutureM2K(), 
-                    OrderSamples.LimitOrder("SELL", 1, pr))
-
-            
-            print("Trigger: {0:>3.2f} {1:>4.2f}".format(t_value, close))
-        else:
+        if (abs(t_value) < 2.98):
             print(time, "B {0:3d} [{1:>4.2f}] S {2:3d}  [T: {3:<4.2f}]".format(self.t_ctr_buy, currentBar,self.t_ctr_sell, t_value), 
                 "<===[ {:.2f} ]".format(close), "Pos: {0:>2.1f} Avg. Price: {1:<5.2f}".format(self.pos_m2k, self.avg_price_m2k))
-        #=======================================================
+            return
 
-        # ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-          #self.realBarData = np.append(self.realBarData, [time, open_, high, low, close, volume])
-        #total_elements = self.realBarData.size
-        #print(self.realBarData.reshape([int(total_elements/6),6])[0])
+        self.reqPositions()
+        print("Issuing orders !!!")
+        print("Trigger: {0:>3.2f} {1:>4.2f}".format(t_value, close))
+
+  
+        if t_value < -0.0 and self.pos_m2k > 10:
+            print("Too many position +++")
+            return
+                
+        if t_value > 0.0 and self.pos_m2k < -10:
+            print("T00 many positions ----")
+            return
+        pr = round(low, 1) if t_value< 0.0  else round(high, 1)
+        m2k_order = OrderSamples.LimitOrder("BUY", 1, pr) if t_value< 0 else OrderSamples.LimitOrder("SELL", 1, pr)
+
+        if t_value < 0.0:
+            self.t_ctr_buy +=1
+            if pr > self.avg_price_m2k:
+                print ("Price too high !!!")
+                return
+        else:
+            self.t_ctr_sell+=1
+            if pr < self.avg_price_m2k:
+                print("Price too low !!!")
+                return               
+
+        self.placeOrder(self.nextOrderId(), ContractSamples.FutureM2K(), m2k_order)
+ 
+
+ 
     # [realtimebar]
 #================================================================================================================
     @printWhenExecuting
