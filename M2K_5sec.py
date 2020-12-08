@@ -212,7 +212,8 @@ class TestApp(TestWrapper, TestClient):
         self.pos_m2k = 0.0
         self.avg_price_m2k = 0.0
         self.open_orders_m2k = 0.0
-        self.canTrade = False
+        self.last_spr_m2k = 0.0
+        self.last_bpr_m2k = 0.0
 
     def dumpTestCoverageSituation(self):
         for clntMeth in sorted(self.clntMeth2callCount.keys()):
@@ -947,22 +948,37 @@ class TestApp(TestWrapper, TestClient):
         super().realtimeBar(reqId, time, open_, high, low, close, volume, wap, count)
         #print(#"RealTimeBar. TickerId:", 
         #reqId, RealTimeBar(time, -1, open_, high, low, close, volume, wap, count))
-
-
         #======================================================
         currentBar = close - open_
         self.realBarData = np.append(self.realBarData, currentBar)
         # if self.canTrade == False  &  len(self.realBarData) > 200:
         #     self.canTrade = True
-        if len(self.realBarData) < 24:
+        if len(self.realBarData) < 12:
             print("Not Open for Trading !!!")
             print("Priming the pipeline !!! Can't Trade")
+            return        
+        #======================================================
+        if abs(self.pos_m2k) < 1.0 and self.currentBar < 0:
+            self.placeOrder(self.nextOrderId, ContractSamples.FutureM2K(), OrderSamples.LimitOrder("BUY", 1, round(low,1)))
             return
+        if abs(self.pos_m2k) < 1.0 and self.currentBar > 0:
+            self.placeOrder(self.nextOrderId, ContractSamples.FutureM2K(), OrderSamples.LimitOrder("SELL", 1, round(high,1)))
+            return
+        if low < self.avg_price_m2k and self.pos_m2k < 0.0:
+            self.placeOrder(self.nextOrderId, ContractSamples.FutureM2K(), OrderSamples.LimitOrder("BUY", 1, round(low-1,1)))
+            return
+        if high > self.avg_price_m2k and self.pos_m2k > 0.0:
+            self.placeOrder(self.nextOrderId, ContractSamples.FutureM2K(), OrderSamples.LimitOrder("SELL", 1, round(high+1,1)))
+            return
+        #======================================================
+
 
 
         t_value =  (currentBar-np.mean(self.realBarData))/np.std(self.realBarData)
+
         if (abs(t_value) < 2.98):
-            print(time, "B {0:3d} [{1:>4.2f}] S {2:3d}  [T: {3:<4.2f}]".format(self.t_ctr_buy, currentBar,self.t_ctr_sell, t_value), 
+            print(datetime.datetime.fromtimestamp(time, tz="US/Eastern"), #datetime.datetime.now().strftime("%H%M%S"), 
+                "B {0:3d} [{1:>4.2f}] S {2:3d}  [T: {3:<4.2f}]".format(self.t_ctr_buy, currentBar,self.t_ctr_sell, t_value), 
                 "<===[ {:.2f} ]".format(close), "Pos: {0:>2.1f} Avg. Price: {1:<5.2f}".format(self.pos_m2k, self.avg_price_m2k))
             return
 
@@ -980,6 +996,10 @@ class TestApp(TestWrapper, TestClient):
             return
         pr = round(low, 1) if t_value< 0.0  else round(high, 1)
         m2k_order = OrderSamples.LimitOrder("BUY", 1, pr) if t_value< 0 else OrderSamples.LimitOrder("SELL", 1, pr)
+
+        if abs(self.pos_m2k) < 1.0:
+            self.placeOrder(self.nextOrderId(), ContractSamples.FutureM2K(), m2k_order)
+            return             
 
         if t_value < 0.0:
             self.t_ctr_buy +=1
