@@ -958,23 +958,23 @@ class TestApp(TestWrapper, TestClient):
             print("Priming the pipeline !!! Can't Trade")
             return        
         #======================================================
-        if abs(self.pos_m2k) < 1.0 and self.currentBar < 0:
-            self.placeOrder(self.nextOrderId, ContractSamples.FutureM2K(), OrderSamples.LimitOrder("BUY", 1, round(low,1)))
+        if abs(self.pos_m2k) < 1.0 and currentBar < 0:
+            self.placeOrder(self.nextOrderId(), ContractSamples.FutureM2K(), OrderSamples.LimitOrder("BUY", 1, round(low,1)))
             return
-        if abs(self.pos_m2k) < 1.0 and self.currentBar > 0:
-            self.placeOrder(self.nextOrderId, ContractSamples.FutureM2K(), OrderSamples.LimitOrder("SELL", 1, round(high,1)))
+        if abs(self.pos_m2k) < 1.0 and currentBar > 0:
+            self.placeOrder(self.nextOrderId(), ContractSamples.FutureM2K(), OrderSamples.LimitOrder("SELL", 1, round(high,1)))
             return
-        if low < self.avg_price_m2k and self.pos_m2k < 0.0:
-            self.placeOrder(self.nextOrderId, ContractSamples.FutureM2K(), OrderSamples.LimitOrder("BUY", 1, round(low-1,1)))
+        if low < self.avg_price_m2k and self.pos_m2k < -5.0:
+            self.placeOrder(self.nextOrderId(), ContractSamples.FutureM2K(), OrderSamples.LimitOrder("BUY", 1, round(low,1)))
             return
-        if high > self.avg_price_m2k and self.pos_m2k > 0.0:
-            self.placeOrder(self.nextOrderId, ContractSamples.FutureM2K(), OrderSamples.LimitOrder("SELL", 1, round(high+1,1)))
+        if high > self.avg_price_m2k and self.pos_m2k > 5.0:
+            self.placeOrder(self.nextOrderId(), ContractSamples.FutureM2K(), OrderSamples.LimitOrder("SELL", 1, round(high,1)))
             return
         #======================================================
 
         start_pos = 0 if len(self.realBarData) -120 < 1 else len(self.realBarData) - 120
 
-        t_value =  (currentBar-np.mean(self.realBarData))/np.std(self.realBarData[start_pos:len(self.realBarData)-1])
+        t_value =  (currentBar-np.mean(self.realBarData[start_pos:len(self.realBarData)-1]))/np.std(self.realBarData[start_pos:len(self.realBarData)-1])
 
         if (abs(t_value) < 2.98):
             print(datetime.datetime.fromtimestamp(time, tz=None), #datetime.datetime.now().strftime("%H%M%S"), 
