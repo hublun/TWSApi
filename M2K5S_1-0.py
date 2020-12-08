@@ -963,10 +963,11 @@ class TestApp(TestWrapper, TestClient):
         if abs(self.pos_m2k) < 1.0 and currentBar > 0:
             self.placeOrder(self.nextOrderId(), ContractSamples.FutureM2K(), OrderSamples.LimitOrder("SELL", 1, round(high,1)))
             return
+        #------------------ end of initial trading when no pos ----------------
         if low < self.avg_price_m2k and self.pos_m2k < -2.0:
             self.placeOrder(self.nextOrderId(), ContractSamples.FutureM2K(), OrderSamples.LimitOrder("BUY", 1, round(low-0.3,1)))
             return
-        if high > self.avg_price_m2k and self.pos_m2k > 2.0:
+        if high > self.avg_price_m2k and self.pos_m2k > 9.0:
             self.placeOrder(self.nextOrderId(), ContractSamples.FutureM2K(), OrderSamples.LimitOrder("SELL", 1, round(high+0.3,1)))
             return
         #======================================================
