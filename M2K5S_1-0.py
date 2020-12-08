@@ -992,7 +992,7 @@ class TestApp(TestWrapper, TestClient):
             print("Too many position +++")
             return
                 
-        if t_value > 0.0 and self.pos_m2k < -10:
+        if t_value > 0.0 and self.pos_m2k < -5:
             print("T00 many positions ----")
             return
         pr = round(low, 1) if t_value< 0.0  else round(high, 1)
