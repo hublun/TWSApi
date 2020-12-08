@@ -977,8 +977,8 @@ class TestApp(TestWrapper, TestClient):
 
         if (abs(t_value) < 2.98):
             print(datetime.datetime.fromtimestamp(time, tz=None), #datetime.datetime.now().strftime("%H%M%S"), 
-                "B {0:3d} [{1:>4.2f}] S {2:3d}  [T: {3:<4.2f}]".format(self.t_ctr_buy, currentBar,self.t_ctr_sell, t_value), 
-                " [ {:.2f} ]".format(close), "Pos: {0:>2.1f} Avg. Price: $ {1:<5.2f}".format(self.pos_m2k, self.avg_price_m2k),
+                "B {0:3d} [{1:+4.2f}] S {2:3d}  [T: {3:+4.2f}]".format(self.t_ctr_buy, currentBar,self.t_ctr_sell, t_value), 
+                " [ {:.2f} ]".format(close), "Pos: {0:+2.1f} Avg.$ {1:<5.2f}".format(self.pos_m2k, self.avg_price_m2k),
                 "Last TradePrice: [$ {0:4.1f}] [$ {1:4.1f}]".format(self.last_bpr_m2k, self.last_spr_m2k))
             return
 
