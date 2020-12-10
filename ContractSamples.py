@@ -306,15 +306,29 @@ class ContractSamples:
         return contract
 
     @staticmethod
-    def FutureM2K():
+    def Fut_M2K():
         #! [futcontract_multiplier]
         contract = Contract()
         contract.symbol = "M2K"
         contract.secType = "FUT"
         contract.exchange = "GLOBEX"
         contract.currency = "USD"
-        contract.lastTradeDateOrContractMonth = "202012"
-        contract.localSymbol = "M2KZ0"
+        contract.lastTradeDateOrContractMonth = "202103"
+        contract.localSymbol = "M2KH1"
+        contract.multiplier = 5
+        #! [futcontract_multiplier]
+        return contract
+
+    @staticmethod
+    def Fut_MES():
+        #! [futcontract_multiplier]
+        contract = Contract()
+        contract.symbol = "MES"
+        contract.secType = "FUT"
+        contract.exchange = "GLOBEX"
+        contract.currency = "USD"
+        contract.lastTradeDateOrContractMonth = "202103"
+        contract.localSymbol = "MESH1"
         contract.multiplier = 5
         #! [futcontract_multiplier]
         return contract
