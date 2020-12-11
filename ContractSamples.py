@@ -264,12 +264,13 @@ class ContractSamples:
     def SimpleFuture():
         #! [futcontract]
         contract = Contract()
-        contract.symbol = "M2K"
+        contract.symbol = "MYM"
         contract.secType = "FUT"
-        contract.exchange = "GLOBEX"
+        contract.exchange = "ECBOT"
         contract.currency = "USD"
-        contract.lastTradeDateOrContractMonth = "202012"
-        contract.localSymbol = "M2KZ0"
+        contract.lastTradeDateOrContractMonth = "202103"
+        #contract.localSymbol = "MYMH1"
+        contract.multiplier = 0.5
         #! [futcontract]
         return contract
 
@@ -316,6 +317,34 @@ class ContractSamples:
         contract.lastTradeDateOrContractMonth = "202103"
         contract.localSymbol = "M2KH1"
         contract.multiplier = 5
+        #! [futcontract_multiplier]
+        return contract
+
+    @staticmethod
+    def Fut_MNQ():
+        #! [futcontract_multiplier]
+        contract = Contract()
+        contract.symbol = "MNQ"
+        contract.secType = "FUT"
+        contract.exchange = "GLOBEX"
+        contract.currency = "USD"
+        contract.lastTradeDateOrContractMonth = "202103"
+        contract.localSymbol = "MNQH1"
+        contract.multiplier = 2
+        #! [futcontract_multiplier]
+        return contract
+
+    @staticmethod
+    def Fut_MYM():
+        #! [futcontract_multiplier]
+        contract = Contract()
+        contract.symbol = "MYM"
+        contract.secType = "FUT"
+        contract.exchange = "ECBOT"
+        contract.currency = "USD"
+        contract.lastTradeDateOrContractMonth = "202103"
+        contract.localSymbol = "MYMH1"
+        contract.multiplier = 0.5
         #! [futcontract_multiplier]
         return contract
 

@@ -224,8 +224,8 @@ class TestApp(TestWrapper, TestClient):
         self.Q_length = 120
         self.delta = 0.25
         # contract and tick
-        self.tick = 1
-        self.contrakt = ContractSamples.SimpleFuture()
+        self.tick = 0.1
+        self.contract = ContractSamples.Fut_MNQ()
         #=  limiting long and short orders 
         self.Max_sp = -5 # max short positions
         self.Max_lp = 5  # max long positins
@@ -364,7 +364,7 @@ class TestApp(TestWrapper, TestClient):
                   orderState: OrderState):
         super().openOrder(orderId, contract, order, orderState)
         
-        if contract.localSymbol==self.contrakt.localSymbol:
+        if contract.localSymbol==self.contract.localSymbol:
             #print("\n>>>>>>>>>>>>> M2K order submitted")
             if order.action == 'BUY':
                 self.open_b_orders += 1
@@ -590,10 +590,10 @@ class TestApp(TestWrapper, TestClient):
     def position(self, account: str, contract: Contract, position: float,
                  avgCost: float):
         super().position(account, contract, position, avgCost)
-        if contract.symbol== self.contrakt.symbol:
+        if contract.localSymbol== self.contract.localSymbol:
                 #print(self.pos_m2k, self.avg_price);
                 self.pos = position
-                self.avg_price = avgCost/self.contrakt.multiplier
+                self.avg_price = round(avgCost/int(contract.multiplier),1)
                 #print(self.pos_m2k, self.avg_price);
         else:
             pass
@@ -964,7 +964,7 @@ class TestApp(TestWrapper, TestClient):
     def realTimeBarsOperations_req(self):
         # Requesting real time bars
         # ! [reqrealtimebars]
-        self.reqRealTimeBars(3001, self.contrakt, 50, "MIDPOINT", False, [])
+        self.reqRealTimeBars(3001, self.contract, 50, "MIDPOINT", False, [])
         # ! [reqrealtimebars]
    #========================================
     @iswrapper
@@ -1031,7 +1031,7 @@ class TestApp(TestWrapper, TestClient):
             
             #prs=round(prs/self.tick,0)*self.tick
             print(prs)    
-            self.placeOrder(self.nextOrderId(), self.contrakt, 
+            self.placeOrder(self.nextOrderId(), self.contract, 
             OrderSamples.LimitOrder("BUY", 1, prs))
             # else:
             #     print('========Enough buy orders =========')
@@ -1042,7 +1042,7 @@ class TestApp(TestWrapper, TestClient):
             prs = math.ceil(high+self.delta)
             #prs=round(prs/self.tick,0)*self.tick
             print(prs)              
-            self.placeOrder(self.nextOrderId(), self.contrakt, 
+            self.placeOrder(self.nextOrderId(), self.contract, 
             OrderSamples.LimitOrder("SELL", 1, prs))
             # else:
             #     print('========= Enough sell orders ================')
@@ -1084,7 +1084,7 @@ class TestApp(TestWrapper, TestClient):
         #--------- too extreme to ignore ---------------------
         if abs(tv) > 6.66:
             print(time, "Highest t-Value: [{:+2.2f}]".format(tv))
-            self.placeOrder(self.nextOrderId(), self.contrakt, fut_order)
+            self.placeOrder(self.nextOrderId(), self.contract, fut_order)
             return
         # ----------------------- too many short and long pos --------------------------
         cond_too_many_longs =  tv < -0.0 and self.pos > self.Max_lp
@@ -1112,7 +1112,7 @@ class TestApp(TestWrapper, TestClient):
         else:
             self.t_ctr_sell +=1               
         #************** release t=3 regular orders **********************************
-        self.placeOrder(self.nextOrderId(), self.contrakt, fut_order)
+        self.placeOrder(self.nextOrderId(), self.contract, fut_order)
 
     # [realtimebar]
 #================================================================================================================
@@ -1554,7 +1554,7 @@ class TestApp(TestWrapper, TestClient):
     def execDetails(self, reqId: int, contract: Contract, execution: Execution):
         super().execDetails(reqId, contract, execution)
         print("\n--------------done some thing ----------->")
-        if contract.symbol == self.contrakt.symbol:
+        if contract.symbol == self.contract.symbol:
             if execution.side == "SLD":
                 
                 self.last_spr = execution.price
