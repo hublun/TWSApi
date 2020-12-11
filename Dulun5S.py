@@ -15,6 +15,7 @@ import sys
 import json
 import pandas as pd
 import numpy as np
+import math
 
 from ibapi import wrapper
 from ibapi import utils
@@ -204,27 +205,30 @@ class TestApp(TestWrapper, TestClient):
         self.globalCancelOnly = False
         self.simplePlaceOid = None
         #self.histData = collections.defaultdict(list)
-        self.contract = ContractSamples.Fut_M2K()
+        
         self.realBarData = np.empty([])
  
         self.t_ctr_buy = 0
         self.t_ctr_sell = 0
-        self.pos_m2k = 0.0
-        self.avg_price_m2k = 0.0
+        self.pos = 0.0
+        self.avg_price = 0.0
         
-        self.last_spr_m2k = 0.0
-        self.last_bpr_m2k = 0.0
+        self.last_spr = 0.0
+        self.last_bpr = 0.0
         
         self.prev_os = 0.0
         self.prev_ob = 0.0
 
         self.open_s_orders = 0.0
         self.open_b_orders = 0.0
-
+        self.Q_length = 120
         self.delta = 0.5
-
-        self.Max_sp = -5
-        self.Max_lp = 5
+        # contract and tick
+        self.tick = 0.1
+        self.contract = ContractSamples.Fut_MES()
+        #=  limiting long and short orders 
+        self.Max_sp = -1 # max short positions
+        self.Max_lp = 5  # max long positins
 
     def dumpTestCoverageSituation(self):
         for clntMeth in sorted(self.clntMeth2callCount.keys()):
@@ -588,8 +592,8 @@ class TestApp(TestWrapper, TestClient):
         super().position(account, contract, position, avgCost)
         if contract.localSymbol== self.contract.localSymbol:
                 #print(self.pos_m2k, self.avg_price);
-                self.pos_m2k = position
-                self.avg_price_m2k = round(avgCost/int(contract.multiplier),1)
+                self.pos = position
+                self.avg_price = round(avgCost/int(contract.multiplier),1)
                 #print(self.pos_m2k, self.avg_price);
         else:
             pass
@@ -974,11 +978,11 @@ class TestApp(TestWrapper, TestClient):
         currentBar = close - open_
         self.realBarData = np.append(self.realBarData, currentBar)
 
-        print("[Pos: {0:+2.1f}]...[Avg.$ {1:<5.2f}]".format(self.pos_m2k, self.avg_price_m2k),
+        print("[Pos: {0:+2.2f}]...[Avg.$ {1:<5.2f}]".format(self.pos, self.avg_price),
             3*".",datetime.datetime.fromtimestamp(time, tz=None),
-            "...[C$ {:4.1f}]".format(close)+
-            "...[OB: {0:2.1f}] [OS: {1:2.1f}]".format(self.open_b_orders, self.open_s_orders)+
-            "...[LB$ {0:2.1f}]..[LS$ {1:2.1f}]".format(self.last_bpr_m2k, self.last_spr_m2k))
+            "...[C$ {:4.2f}]".format(close)+
+            "...[OB: {0:2.1f}] [OS: {1:2.2f}]".format(self.open_b_orders, self.open_s_orders)+
+            "...[LB$ {0:2.1f}]..[LS$ {1:2.2f}]".format(self.last_bpr, self.last_spr))
         
         if len(self.realBarData) < 12:
             print("Not Open for Trading !!!")
@@ -989,17 +993,17 @@ class TestApp(TestWrapper, TestClient):
 
         self.reqPositions()
 
-        if abs(self.pos_m2k) < 0.5:
-            self.avg_price_m2k = close
-            self.last_bpr_m2k = low
-            self.last_spr_m2k = high
+        if abs(self.pos) < 0.5:
+            self.avg_price = close
+            self.last_bpr = low
+            self.last_spr = high
         
             
-        if self.last_bpr_m2k < 1.0:
-                self.last_bpr_m2k = low 
+        if self.last_bpr < 1.0:
+                self.last_bpr = low 
             
-        if self.last_spr_m2k < 1.0:
-               self.last_spr_m2k = high
+        if self.last_spr < 1.0:
+               self.last_spr = high
         #======================================================
 
 
@@ -1016,17 +1020,26 @@ class TestApp(TestWrapper, TestClient):
         #------------------ end of initial trading when no pos ----------------
         #print("High", high, "low", low, "Average Pos $", self.avg_price_m2k)
         #print("Positions", self.pos_m2k, "OB", self.open_b_orders, "OS", self.open_s_orders)
-        cond_close_short = high < self.avg_price_m2k and self.pos_m2k < -0.5 and self.open_b_orders < abs(self.pos_m2k)
+        cond_close_short = high < self.avg_price and self.pos < -0.5 and self.open_b_orders < abs(self.pos)
         #print("Close Short", cond_close_short, high < self.avg_price_m2k, self.pos_m2k < -0.5, self.open_b_orders < abs(self.pos_m2k))
-        if cond_close_short:    
-            self.placeOrder(self.nextOrderId(), self.contract, OrderSamples.LimitOrder("BUY", 1, round(low-self.delta,1)))
+        if cond_close_short:
+            prs = math.floor(low-self.delta)
+            
+            #prs=round(prs/self.tick,0)*self.tick
+            print(prs)    
+            self.placeOrder(self.nextOrderId(), self.contract, 
+            OrderSamples.LimitOrder("BUY", 1, prs))
             # else:
             #     print('========Enough buy orders =========')
         
-        cond_close_long =  low > self.avg_price_m2k and self.pos_m2k > 0.5 and self.open_s_orders < self.pos_m2k
+        cond_close_long =  low > self.avg_price and self.pos > 0.5 and self.open_s_orders < self.pos
         #print("Close Long", cond_close_long, low > self.avg_price_m2k, self.pos_m2k > 0.5, self.open_s_orders < self.pos_m2k)
         if cond_close_long:
-            self.placeOrder(self.nextOrderId(), self.contract, OrderSamples.LimitOrder("SELL", 1, round(high+self.delta,1)))
+            prs = math.ceil(high+self.delta)
+            #prs=round(prs/self.tick,0)*self.tick
+            print(prs)              
+            self.placeOrder(self.nextOrderId(), self.contract, 
+            OrderSamples.LimitOrder("SELL", 1, prs))
             # else:
             #     print('========= Enough sell orders ================')
         #======================================================
@@ -1035,13 +1048,13 @@ class TestApp(TestWrapper, TestClient):
         self.reqOpenOrders()       
         #======================================================
 
-        start_pos = 0 if len(self.realBarData) -120 < 1 else len(self.realBarData) - 120
+        start_pos = 0 if len(self.realBarData) - self.Q_length < 1 else len(self.realBarData) - self.Q_length
         end_pos = len(self.realBarData)-1
         mu = np.mean(self.realBarData[start_pos:end_pos])
         sigma = np.std(self.realBarData[start_pos:end_pos])
-        t_value = (currentBar - mu) / sigma
+        tv = (currentBar - mu) / sigma
 
-        if (abs(t_value) < 3.03):
+        if (abs(tv) < 3.33):
             #print(89*".") 
                 # "[B {0:2d}]+[Bar {1:+4.2f}]+[S {2:2d}]+[T: {3:+4.2f}]".format(self.t_ctr_buy, currentBar,self.t_ctr_sell, t_value), 
                 # "_____[{:.2f}]____".format(close),  
@@ -1051,26 +1064,27 @@ class TestApp(TestWrapper, TestClient):
 
         
         #print("==============!!! Issuing orders !!! ========================")
-        print("\t>>>>>>>>>>>>>>>>>>>>>>>>[t-Value: {0:+3.2f}] [Price: {1:>4.2f}] [Bar: {2:2.2f}]".format(t_value, close, currentBar))
+        print("\t>>>>>>>>>>>>>>>>>>>>>>>>[t-Value: {0:+3.2f}] [Price: {1:>4.2f}] [Bar: {2:2.2f}]".format(tv, close, currentBar))
         #======================== order preparation ==========
-        pr = round(low-self.delta*(1+self.pos_m2k/100), 1) if t_value< 0.0  else round(high+self.delta*(1+self.pos_m2k/100), 1)
+        pr = round(low-self.delta*(1+self.pos/100), 0) if tv < 0.0  else round(high+self.delta*(1+self.pos/100), 0)
+        pr = round(pr/self.tick,0)*self.tick
         # pace between attempted price pr and last on record
-        m2k_order = OrderSamples.LimitOrder("BUY", 1, pr) if t_value< 0 else OrderSamples.LimitOrder("SELL", 1, pr)
+        fut_order = OrderSamples.LimitOrder("BUY", 1, pr) if tv< 0 else OrderSamples.LimitOrder("SELL", 1, pr)
     
-        if m2k_order.action == 'BUY' and pr > self.last_bpr_m2k:
+        if fut_order.action == 'BUY' and pr > self.last_bpr:
             print("????????????????must be lower than last buy price")
             return
-        if m2k_order.action == 'SELL' and pr < self.last_spr_m2k:
+        if fut_order.action == 'SELL' and pr < self.last_spr:
             print("???????????????must be higher than last sell proce")
             return
         #--------- too extreme to ignore ---------------------
-        if abs(t_value) > 6.66:
-            print(time, "Highest t-Value: [{:+2.2f}]".format(t_value))
-            self.placeOrder(self.nextOrderId(), self.contract, m2k_order)
+        if abs(tv) > 6.66:
+            print(time, "Highest t-Value: [{:+2.2f}]".format(tv))
+            self.placeOrder(self.nextOrderId(), self.contract, fut_order)
             return
         # ----------------------- too many short and long pos --------------------------
-        cond_too_many_longs =  t_value < -0.0 and self.pos_m2k > self.Max_lp
-        cond_too_many_shorts = t_value > 0.0 and self.pos_m2k <  self.Max_sp
+        cond_too_many_longs =  tv < -0.0 and self.pos > self.Max_lp
+        cond_too_many_shorts = tv > 0.0 and self.pos <  self.Max_sp
         if cond_too_many_longs:
             print("Sorry Too many position +++")
             return
@@ -1079,8 +1093,8 @@ class TestApp(TestWrapper, TestClient):
             print("Sorry Too many positions ----")
             return
 
-        exit_price_too_high = m2k_order.action == 'BUY' and m2k_order.lmtPrice > self.avg_price_m2k
-        exit_price_too_low = m2k_order.action == 'SELL' and m2k_order.lmtPrice > self.avg_price_m2k
+        exit_price_too_high = fut_order.action == 'BUY' and fut_order.lmtPrice > self.avg_price
+        exit_price_too_low = fut_order.action == 'SELL' and fut_order.lmtPrice > self.avg_price
 
         if exit_price_too_high:
                 print ("Price too high !!!")
@@ -1089,12 +1103,12 @@ class TestApp(TestWrapper, TestClient):
                 print("Price not high enough !!!")
                 return
        
-        if m2k_order.action == 'BUY': 
+        if fut_order.action == 'BUY': 
             self.t_ctr_buy +=1 
         else:
             self.t_ctr_sell +=1               
         #************** release t=3 regular orders **********************************
-        self.placeOrder(self.nextOrderId(), self.contract, m2k_order)
+        self.placeOrder(self.nextOrderId(), self.contract, fut_order)
 
     # [realtimebar]
 #================================================================================================================
@@ -1539,10 +1553,10 @@ class TestApp(TestWrapper, TestClient):
         if contract.symbol == 'M2K':
             if execution.side == "SLD":
                 
-                self.last_spr_m2k = execution.price
+                self.last_spr = execution.price
             else:
                  
-                self.last_bpr_m2k = execution.price
+                self.last_bpr = execution.price
         print("[OB: {0:2.1f}] [OS: {1:2.1f}]".format(self.open_b_orders, self.open_s_orders))
                 
            
