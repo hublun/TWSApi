@@ -364,7 +364,7 @@ class TestApp(TestWrapper, TestClient):
                   orderState: OrderState):
         super().openOrder(orderId, contract, order, orderState)
         
-        if contract.localSymbol==self.contrakt.localSymbol:
+        if contract.symbol==self.contrakt.symbol:
             #print("\n>>>>>>>>>>>>> M2K order submitted")
             if order.action == 'BUY':
                 self.open_b_orders += 1
