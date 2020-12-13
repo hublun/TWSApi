@@ -484,9 +484,9 @@ class TestApp(TestWrapper, TestClient):
         # ! [reqhistoricaldatacontfut]
 
         #timeStr = datetime.datetime.fromtimestamp(time.time()).strftime('%Y%m%d %H:%M:%S')
-        timeStr = "20201127 16:25:00"
+        timeStr = "20201120 16:35:00"
 
-        self.reqHistoricalData(18002, ContractSamples.ContFut(), timeStr, "5 D", "1 min", "TRADES", 0, 1, False, []);
+        self.reqHistoricalData(18002, ContractSamples.ContFut(), timeStr, "5 D", "5 secs", "TRADES", 0, 1, False, []);
         #self.reqHistoricalData(18002, ContractSamples.ContFut(), timeStr, "5 D", "5 secs", "TRADES", 0, 1, False, []);
         
         # ! [reqhistoricaldatacontfut]
