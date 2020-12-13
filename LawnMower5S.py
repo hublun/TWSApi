@@ -223,13 +223,13 @@ class TestApp(TestWrapper, TestClient):
         self.open_b_orders = 0.0
         self.Q_length = 120
         self.delta = 0.25
-        # contract and tick
-        self.tick = 1
-        self.contrakt = ContractSamples.SimpleFuture()
-        #=  limiting long and short orders 
-        self.Max_sp = -5 # max short positions
-        self.Max_lp = 5  # max long positins
 
+        # contract and tick
+        self.tick = 0.1
+        self.contrakt = ContractSamples.Fut_M2K()
+        self.Max_sp = -9 # max short positions
+        self.Max_lp = 9  # max long positins
+        #===============================================
     def dumpTestCoverageSituation(self):
         for clntMeth in sorted(self.clntMeth2callCount.keys()):
             logging.debug("ClntMeth: %-30s %6d" % (clntMeth,
@@ -975,6 +975,12 @@ class TestApp(TestWrapper, TestClient):
         #print(#"RealTimeBar. TickerId:", 
         #reqId, RealTimeBar(time, -1, open_, high, low, close, volume, wap, count))
         #======================================================
+        if (jump := high - low) < self.tick/4:
+            print("No jump at all {:1.2f}".format(jump))
+            return
+        else:
+            pass
+
         currentBar = close - open_
         if abs(currentBar) < 0.01:
             print("??? [{0:2.2f}][Open: {1:2.2f}][High: {2:2.2f}][Low: {3:2.2f}]".format(currentBar, open_, high, low))
