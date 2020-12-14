@@ -218,9 +218,9 @@ class TestApp(TestWrapper, TestClient):
         self.pos = 0.0
         self.avg_price = 0.0
         
-        self.last_spr = 0.0
-        self.last_bpr = 0.0
-        self.last_prices =[] # buy and sell prices
+        # self.last_spr = 0.0
+        # self.last_bpr = 0.0
+        self.last_prices =[0.0, 0.0] # buy and sell prices
         
         # self.prev_os = 0.0
         # self.prev_ob = 0.0
@@ -1008,16 +1008,15 @@ class TestApp(TestWrapper, TestClient):
 
 
 
-        print("[Pos: {0:+2.2f} ${1:<4.2f}]".format(self.pos, self.avg_price),
-            "...[{0:+2.2f}]...".format(currentBar),
+        print("[Pos: {0:+2.0f} ${1:<4.2f}]".format(self.pos, self.avg_price),
+            "  [{0:+2.2f}]...".format(currentBar),
             datetime.datetime.fromtimestamp(time, tz=None),
-            "...[C$ {:4.2f}]".format(close)+
-            "...[OB: {0:2.1f}] [OS: {1:2.2f}]".format(self.open_orders[0], self.open_orders[1])+
-            "...[LB$ {0:2.1f}]..[LS$ {1:2.2f}]".format(self.last_bpr, self.last_spr))
+            "  [C$ {:4.2f}]".format(close)+
+            "  [OB: {0:2.0f} OS: {1:2.0f}]".format(self.open_orders[0], self.open_orders[1])+
+            "  [LB$ {0:2.1f} LS$ {1:2.2f}]".format(self.last_prices[0], self.last_prices[1]))
         
         if len(self.realBarData) < 12:
             print("Not Open for Trading !!!")
-
             return
 
         self.delta = high - low
@@ -1026,15 +1025,15 @@ class TestApp(TestWrapper, TestClient):
 
         if abs(self.pos) < 0.5:
             self.avg_price = close
-            self.last_bpr = low
-            self.last_spr = high
+            self.last_prices[0] = low
+            self.last_prices[1] = high
         
             
-        if self.last_bpr < 1.0:
-                self.last_bpr = self.avg_price 
+        if self.last_prices[0] < 1.0:
+            self.last_prices[0] = self.avg_price 
             
-        if self.last_spr < 1.0:
-               self.last_spr = self.avg_price
+        if self.last_prices[1] < 1.0:
+               self.last_prices[1] = self.avg_price
         #======================================================
         if high > self.hhillow[1]:
             self.hhillow[0] = time
@@ -1119,10 +1118,10 @@ class TestApp(TestWrapper, TestClient):
         # pace between attempted price pr and last on record
         fut_order = OrderSamples.LimitOrder("BUY", 1, pr) if tv< 0 else OrderSamples.LimitOrder("SELL", 1, pr)
     
-        if fut_order.action == 'BUY' and pr > self.last_bpr:
+        if fut_order.action == 'BUY' and pr > self.last_prices[0]:
             print("????????????????must be lower than last buy price")
             return
-        if fut_order.action == 'SELL' and pr < self.last_spr:
+        if fut_order.action == 'SELL' and pr < self.last_prices[1]:
             print("???????????????must be higher than last sell price")
             return
         #--------- too extreme to ignore ---------------------
@@ -1601,10 +1600,10 @@ class TestApp(TestWrapper, TestClient):
         if contract.symbol == self.contrakt.symbol:
             if execution.side == "SLD":
                 
-                self.last_spr = execution.price
+                self.last_prices[1] = execution.price
             else:
                  
-                self.last_bpr = execution.price
+                self.last_prices[0] = execution.price
         print("[OB: {0:2.1f}] [OS: {1:2.1f}]".format(self.open_b_orders, self.open_s_orders))
                 
            
