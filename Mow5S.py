@@ -217,17 +217,9 @@ class TestApp(TestWrapper, TestClient):
 
         self.pos = 0.0
         self.avg_price = 0.0
-        
-        # self.last_spr = 0.0
-        # self.last_bpr = 0.0
+
         self.last_prices =[0.0, 0.0] # buy and sell prices
         
-        # self.prev_os = 0.0
-        # self.prev_ob = 0.0
-        # self.prev_open_orders =()
-
-        self.open_s_orders = 0.0
-        self.open_b_orders = 0.0
         self.open_orders = [0,0]
         #================ Strategy ===============
         self.Q_length = 120
@@ -1063,7 +1055,7 @@ class TestApp(TestWrapper, TestClient):
         cond_close_short = high < self.avg_price and self.pos < -0.5 and self.open_orders[0] < abs(self.pos)
         #print("Close Short", cond_close_short, high < self.avg_price_m2k, self.pos_m2k < -0.5, self.open_b_orders < abs(self.pos_m2k))
         if cond_close_short:
-            prs = math.floor(low-self.delta*self*self.open_orders[0])
+            prs = math.floor(low-self.delta*self.open_orders[0])
             
             #prs=round(prs/self.tick,0)*self.tick
             #print(prs)    
