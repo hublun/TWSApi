@@ -410,11 +410,11 @@ class TestApp(TestWrapper, TestClient):
                     whyHeld: str, mktCapPrice: float):
         super().orderStatus(orderId, status, filled, remaining,
                             avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice)
-        print("oooo", orderId, "Status:", status, "Filled:", filled,
-              "Remaining:", remaining, "AvgFillPrice:", avgFillPrice,
-              #"PermId:", permId, "ParentId:", parentId, "LastFillPrice:",
-              #lastFillPrice, "ClientId:", clientId, "WhyHeld:",
-              whyHeld, "MktCapPrice:", mktCapPrice)
+        # print("....", orderId, "Status:", status, "Filled:", filled,
+        #       "Remaining:", remaining, "AvgFillPrice:", avgFillPrice)
+        #       #"PermId:", permId, "ParentId:", parentId, "LastFillPrice:",
+        #       #lastFillPrice, "ClientId:", clientId, "WhyHeld:",
+        #       #whyHeld, "MktCapPrice:", mktCapPrice)
     # ! [orderstatus]
 
 
@@ -1009,7 +1009,8 @@ class TestApp(TestWrapper, TestClient):
 
 
         print("[Pos: {0:+2.0f} ${1:<4.2f}]".format(self.pos, self.avg_price),
-            "  [{0:+2.2f}]...".format(currentBar),
+            #"  [{0:+2.2f}]  ".format(currentBar),
+            #"Slopes H [{0:2.2f} L {1:2.2f}]".format(self.hhillow[0], self.hhillow[1]),
             datetime.datetime.fromtimestamp(time, tz=None),
             "  [C$ {:4.2f}]".format(close)+
             "  [OB: {0:2.0f} OS: {1:2.0f}]".format(self.open_orders[0], self.open_orders[1])+
@@ -1059,13 +1060,13 @@ class TestApp(TestWrapper, TestClient):
         #------------------ end of initial trading when no pos ----------------
         #print("High", high, "low", low, "Average Pos $", self.avg_price_m2k)
         #print("Positions", self.pos_m2k, "OB", self.open_b_orders, "OS", self.open_s_orders)
-        cond_close_short = high < self.avg_price and self.pos < -0.5 and self.open_[0] < abs(self.pos)
+        cond_close_short = high < self.avg_price and self.pos < -0.5 and self.open_orders[0] < abs(self.pos)
         #print("Close Short", cond_close_short, high < self.avg_price_m2k, self.pos_m2k < -0.5, self.open_b_orders < abs(self.pos_m2k))
         if cond_close_short:
-            prs = math.floor(low-self.delta)
+            prs = math.floor(low-self.delta*self*self.open_orders[0])
             
             #prs=round(prs/self.tick,0)*self.tick
-            print(prs)    
+            #print(prs)    
             self.placeOrder(self.nextOrderId(), self.contrakt, 
             OrderSamples.LimitOrder("BUY", 1, prs))
             # else:
@@ -1074,9 +1075,9 @@ class TestApp(TestWrapper, TestClient):
         cond_close_long =  low > self.avg_price and self.pos > 0.5 and self.open_orders[1] < self.pos
         #print("Close Long", cond_close_long, low > self.avg_price_m2k, self.pos_m2k > 0.5, self.open_s_orders < self.pos_m2k)
         if cond_close_long:
-            prs = math.ceil(high+self.delta)
+            prs = math.ceil(high+self.delta*self.open_orders[1])
             #prs=round(prs/self.tick,0)*self.tick
-            print(prs)              
+            #print(prs)              
             self.placeOrder(self.nextOrderId(), self.contrakt, 
             OrderSamples.LimitOrder("SELL", 1, prs))
             # else:
@@ -1101,15 +1102,17 @@ class TestApp(TestWrapper, TestClient):
             return
         #========================== slope calculation =======================
         if (dt:= time - self.hhillow[0]) ==0:
-            hi_beta = (high - self.hhillow[1]) / (dt+1)
+            hi_beta = (high - self.hhillow[1]) / (dt+5)
         else:
             hi_beta = (high - self.hhillow[1]) / (dt)
         if (dt:= time - self.hhillow[2]) == 0:    
-            lo_beta = (low - self.hhillow[3]) / (dt+1)
+            lo_beta = (low - self.hhillow[3]) / (dt+5)
         else:
             lo_beta = (low - self.hhillow[3]) / (dt)
+        
+        print("\tSlopes H [{0:2.4f} L {1:2.5f}]".format(hi_beta*1000, lo_beta*1000))
 
-        print("Current High slope{0:2.2f} and Low Slope {1:2.2f}".format(hi_beta, lo_beta))       
+            
         print("==============!!! Issuing orders !!! ========================")
         print("\t>>>>>>>>>>>>>>>>>>>>>>>>[t-Value: {0:+3.2f}] [Price: {1:>4.2f}] [Bar: {2:2.2f}]".format(tv, close, currentBar))
         #======================== order preparation ==========
@@ -1229,13 +1232,13 @@ class TestApp(TestWrapper, TestClient):
         # self.reqContractDetails(210, ContractSamples.OptionForQuery())
         # self.reqContractDetails(211, ContractSamples.EurGbpFx())
         # self.reqContractDetails(212, ContractSamples.Bond())
-        self.reqContractDetails(213, ContractSamples.Fut_MES())
+        self.reqContractDetails(213, self.contrakt)
         # self.reqContractDetails(214, ContractSamples.SimpleFuture())
         # self.reqContractDetails(215, ContractSamples.USStockAtSmart())
         # ! [reqcontractdetails]
 
         # ! [reqmatchingsymbols]
-        self.reqMatchingSymbols(211, "IB")
+        #self.reqMatchingSymbols(211, "IB")
         # ! [reqmatchingsymbols]
 
 
