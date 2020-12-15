@@ -12,6 +12,12 @@ class ContractSamples:
     these four attributes.  """
 
     @staticmethod
+    def find(symbol="m2k"):
+        if symbol.upper() == "M2K":
+            ContractSamples.Fut_M2K()
+            
+
+    @staticmethod
     def EurGbpFx():
         #! [cashcontract]
         contract = Contract()
@@ -261,7 +267,7 @@ class ContractSamples:
     complicated than options."""
 
     @staticmethod
-    def SimpleFuture():
+    def Fut_MYM():
         #! [futcontract]
         contract = Contract()
         contract.symbol = "MYM"
@@ -334,19 +340,19 @@ class ContractSamples:
         #! [futcontract_multiplier]
         return contract
 
-    @staticmethod
-    def Fut_MYM():
-        #! [futcontract_multiplier]
-        contract = Contract()
-        contract.symbol = "MYM"
-        contract.secType = "FUT"
-        contract.exchange = "ECBOT"
-        contract.currency = "USD"
-        contract.lastTradeDateOrContractMonth = "202103"
-        contract.localSymbol = "MYMH1"
-        contract.multiplier = 0.5
-        #! [futcontract_multiplier]
-        return contract
+    # @staticmethod
+    # def Fut_MYM():
+    #     #! [futcontract_multiplier]
+    #     contract = Contract()
+    #     contract.symbol = "MYM"
+    #     contract.secType = "FUT"
+    #     contract.exchange = "ECBOT"
+    #     contract.currency = "USD"
+    #     contract.lastTradeDateOrContractMonth = "202103"
+    #     contract.localSymbol = "MYMH1"
+    #     contract.multiplier = 0.5
+    #     #! [futcontract_multiplier]
+    #     return contract
 
     @staticmethod
     def Fut_MES():
